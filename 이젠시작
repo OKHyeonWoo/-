@@ -1,0 +1,129 @@
+학기 드롭다운
+
+admin_tabs.asp
+
+
+<%
+		sql_s = "select * from hakgi order by hakgi_num"
+    
+    '학기선택
+		If Len(sql_s) > 0 then
+			Set rs_s= dbcon.execute(sql_s)
+			If rs_s.bof Or rs_s.eof then
+			Else
+				%>
+				<select name="select_hakgi">
+					<option value="">선택</option>
+				<%
+				Do Until rs_s.eof
+					%>
+					<option value="<%=rs_s("hakgi_num")%>" <% If hakgi_num= rs_s("hakgi_num") Then Response.write "selected" End If %>><%=rs_s("hakgi_num")%></option>
+					<%
+					rs_s.movenext
+				Loop
+				%>
+				</select>
+				<%
+			End If
+		End if
+		%>
+    
+    
+    <script>
+			
+			$('select[name=select_hakgi]').change(function(){
+				var hakgi_num= $(this).val()
+				location.href= "?hg="+hakgi_num
+			});
+      
+		</script>
+    
+    
+    member_list.asp
+    
+    
+    <%
+hakgi_num= request("hg")
+'Response.write hakgi_num & "<--hakgi_num<br>"
+
+'select_hakgi용
+sql_s="select * from hakgi order by hakgi_num"
+
+
+If Len(hakgi_num) > 0 Then
+	sql_h= "select * from hakgi where hakgi_num='" & hakgi_num & "'"
+	'Response.write sql_h & "<br>"
+	Set rs_h= dbcon.execute(sql_h)
+	if rs_h.bof Or rs_h.eof Then
+		msg= "해당 학기에 회원이 없습니다."
+	Else
+		start_date= rs_h("start_date")
+		end_date=  rs_h("end_date")
+		sql="select * from t_usr where user_id not in ('lmstester','kimts','bella0302' ) "&_
+			"and (regist_date >='" & start_date & "' and regist_date<='" & end_date & "') "&_
+			"order by user_name"
+	End If
+Else
+	msg= "학기를 선택하십시오."
+End if
+
+%>
+    
+    
+    
+    		<%
+		If msg="" Then
+		%>
+			<div>
+		        <%
+                Set rs= dbcon.execute(sql)
+				%>
+
+				<table class="adminT_tp">
+					<tr>
+						<th>순번</th>
+						<th>이름</th>
+						<th>아이디</th>
+						<th>회사</th>
+						<th>사업자등록번호</th>
+						<th>전화번호</th>
+						<th>이메일</th>
+						<th>생년월일</th>
+					</tr>
+				<%
+				If rs.bof Or rs.eof Then
+				%>
+					<tr>
+						<td colspan="8">회원이 없습니다.</td>
+					</tr>
+				<%
+				Else
+					q=1
+					Do Until rs.eof
+						If Len(rs("company_account")) > 0 Then
+							company_account= Left(rs("company_account"),3) & "-" & Mid(rs("company_account"),2,2) & "-" & Right(rs("company_account"),5)
+						End if
+					%>
+					<tr>
+						<td><%=q%></td>
+						<td><%=rs("user_name")%></td>
+						<td><%=rs("user_id")%></td>
+						<td><%=rs("company")%></td>
+						<td><%=company_account%></td>
+						<td><%=rs("phone")%></td>
+						<td><%=rs("email")%></td>
+						<td><%=rs("birthday")%></td>
+					</tr>
+					<%
+						q= q+1
+						rs.movenext
+					loop
+				end If
+				%>
+				</table>
+			</div>
+		<%
+		Else
+			Response.write msg
+		End If
+		%>
