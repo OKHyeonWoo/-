@@ -1,0 +1,205 @@
+<%
+page_id= "member"
+group_title= "관리자페이지"
+page_title= "회원명단"
+tab_Index= 0
+%>
+<!--#include virtual="/include/metatag.asp"-->
+<!--#include virtual="/include/dbcon.asp"-->
+<!--#include virtual="/include/session.asp"-->
+<!--#include virtual="/include/function.asp"-->
+<%
+hakgi_num= request("hg")
+'Response.write hakgi_num & "<--hakgi_num<br>"
+
+'select_hakgi용
+sql_s="select * from hakgi order by hakgi_num"
+
+'
+If Len(hakgi_num) > 0 Then
+	sql_h= "select * from hakgi where hakgi_num='" & hakgi_num & "'"
+	'Response.write sql_h & "<br>"
+	Set rs_h= dbcon.execute(sql_h)
+	if rs_h.bof Or rs_h.eof Then
+		msg= "해당 학기에 회원이 없습니다."
+	Else
+		start_date= rs_h("start_date")
+		end_date=  rs_h("end_date")
+
+		'해당학기의 회원리스트
+		sql="select * from t_usr where user_id not in ('lmstester','kimts','bella0302' ) "&_
+			"and (regist_date >='" & start_date & "' and regist_date<='" & end_date & "') "&_
+			"order by user_name"
+	End If
+Else
+	msg= "학기를 선택하십시오."
+End if
+
+%>
+<body>
+<div id="wrapper" class="n_swiper">
+	<!--#include virtual="/include/header.asp"-->
+	<!--#include virtual="/include/menu.asp"-->
+	<div id="contents">
+		<div id="myclass_con" class="con find_con" >
+		<h5><img src="/images/myclass/home.png" alt="home"> <%=group_title%> > <%=page_title%></h5>
+		<h1><%=page_title%> </h1>
+		<div class="dis_t allim">※ 태블릿 이하 기기에서 접속시, 해당 페이지는 <span class="underline">좌우로 스크롤</span>하여 확인하시기 바랍니다.</div>
+		<!--#include virtual="/include/loading.asp"-->
+		<!--#include virtual="/admin/admin_tabs.asp"-->
+		<div class="mc_ttop">
+		<%
+		If msg="" Then
+		%>
+			<div>
+		        <%
+                Set rs= dbcon.execute(sql)
+				%>
+
+				<table class="adminT_tp">
+					<tr>
+						<th>순번</th>
+						<th>이름</th>
+						<th>아이디</th>
+						<th>회사</th>
+						<th>사업자등록번호</th>
+						<th>전화번호</th>
+						<th>이메일</th>
+						<th>생년월일</th>
+					</tr>
+				<%
+				If rs.bof Or rs.eof Then
+				%>
+					<tr>
+						<td colspan="8">회원이 없습니다.</td>
+					</tr>
+				<%
+				Else
+					q=1
+					Do Until rs.eof
+						If Len(rs("company_account")) > 0 Then
+							company_account= Left(rs("company_account"),3) & "-" & Mid(rs("company_account"),2,2) & "-" & Right(rs("company_account"),5)
+						End if
+					%>
+					<tr>
+						<td><%=q%></td>
+						<td><%=rs("user_name")%></td>
+						<td><%=rs("user_id")%></td>
+						<td><%=rs("company")%></td>
+						<td><%=company_account%></td>
+						<td><%=rs("phone")%></td>
+						<td><%=rs("email")%></td>
+						<td><%=rs("birthday")%></td>
+					</tr>
+					<%
+						q= q+1
+						rs.movenext
+					loop
+				end If
+				%>
+				</table>
+			</div>
+		<%
+		Else
+			Response.write msg
+		End If
+		%>
+		</div>
+	</div>
+	<!--#include virtual="/include/footer.asp"-->
+</div><!--End wrapper-->
+
+</body>
+
+<script>
+	$('#loading').hide();
+	var thisTabIndex= "<%=tab_Index%>";
+	thisPageTab(thisTabIndex);
+
+	//해당화면에서 아이콘색상 바꾸기
+	$(window).resize(function(){
+		if (window.innerWidth > 1024) {
+
+		$('.su_orange .nav_icon').css({"background-position":"0 -19px"});
+
+		} else {
+
+		$('.su_orange .nav_icon').css({"background-position":"0 -2.2vw"});
+
+		 }
+
+	}).resize();
+
+	//모바일에서 상단nextslide없애기
+	var width_size = window.outerWidth;
+	if (width_size <= 640) {
+		$('header').css({"height":"20vw"});
+		$('#m_header_txt > div').css({"display":"none"});
+	}
+
+	$('input[name=submitBtn').click(function(){
+		//한글, 영어만 가능
+		var nameRule= /[가-힣a-zA-Z]+$/;
+		if (!nameRule.test(user_name)) {
+			alert("이름을 확인해 주십시오\n한글, 영문만 사용가능합니다.");
+			$('input[name=user_name]').focus();
+			chk_submit = 0
+			return false;
+		};
+	});
+
+	//인증번호 받기
+	$('input[name=certiNoRequestBtn]').click(function() {
+		var name= $('input[name=user_name]').val()
+		var phone1= $('select[name=phone1]').val();
+		var phone2=	$('input[name=phone2]').val();
+		var phone3=	$('input[name=phone3]').val();
+		var phone= phone1+phone2+phone3
+		var divi= "cert";
+
+		if (!name){
+			alert("이름를 입력해주십시오. ");
+			$('input[name=user_name').focus();
+			return false;
+		}
+
+		if (!phone2 || !phone3){
+			alert("전화번호를 입력해주십시오. ");
+			$('input[name=phone2]').focus();
+			return false;
+		}
+
+		$.get(
+			'/include/phone_rnd_send.asp',
+			{'nm': name, 'pn': phone, 'divi': divi},
+			function(data) {
+				//console.log(data)
+				if (data=="checkMember"){
+					alert("일치하는 회원정보가 없습니다.");
+				}
+				else{
+					alert("인증번호가 발송되었습니다.\n확인 후 인증번호란에 입력해 주십시오.")
+					$('.hide_num').show();
+					$('input[name=certID]').val(data)
+				}
+			}
+		);
+	});
+
+	//인증번호 확인
+	$('input[name=certiNoConfirmBtn]').click(function(){
+		var certID= $('input[name=certID]').val();
+ 		var certiNoConfirm= $('input[name=certiNoConfirm]').val()
+		if (certID==certiNoConfirm)	{
+			alert("인증되었습니다.")
+			$('input[name=certIdCfResilt]').val('Y')
+		}
+		else {
+			alert("인증번호가 틀립니다.")
+			$('input[name=certIdCfResilt]').val('')
+		}
+	});
+</script>
+
+
+</html>
