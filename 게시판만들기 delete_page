@@ -1,0 +1,37 @@
+<!--#include virtual="/include/metatag.asp"-->
+<!--#include virtual="/include/dbcon.asp"-->
+<!--#include virtual="/include/session.asp"-->
+<!--#include virtual="/include/function.asp"-->
+
+<%
+Set uploadform = Server.CreateObject("DEXT.FileUpload")
+uploadform.DefaultPath = "D:\www\FileStorage/request"
+Response.write uploadform.DefaultPath & "<br>"
+
+idx = uploadform("idx")
+ntype =	uploadform("ntype")
+
+If idx="" then
+  msg = "잘못된 접근입니다."
+Else
+
+   sql= " delete board_request from board_request where idx = '"& idx &"' "
+	dbcon.execute(sql), Result
+
+	If Result = 1 Then
+		msg = "정상적으로 처리 되었습니다."
+		
+	Else
+		msg = "다시시도하시기 바랍니다."
+		url = "history.back(-1);"
+	End If
+
+	dbcon.close
+
+End If
+
+%>
+<script type='text/javascript'>
+	alert("<%=msg%>");
+	location.href = 'dev_request.asp'
+</script>
