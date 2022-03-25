@@ -1,0 +1,174 @@
+<!--#include virtual="/include/metatag.asp"-->
+<!--#include virtual="/include/session.asp"-->
+<!--#include virtual="/include/dbcon.asp"-->
+<!--#include virtual="/include/function.asp"-->
+
+<%
+Set uploadform = Server.CreateObject("DEXT.FileUpload")
+uploadform.DefaultPath = "D:\www\FileStorage/request"
+Response.write uploadform.DefaultPath & "<br>"
+
+idx = uploadform("idx")
+category= uploadform("category")
+title=	uploadform("title")
+content= uploadform("content")
+hope_date= Replace(uploadform("hope_date"),"-", "")
+link1=	uploadform("link1")
+plan_date=	uploadform("plan_date")
+close_date= uploadform("close_date")
+memo= uploadform("memo")
+filename =uploadform("file1").FileName
+usr_ip = Request.ServerVariables("REMOTE_ADDR")
+
+
+Response.write category & "<br>"
+Response.write title & "<--title<br>"
+Response.write content & "<br>"
+'Response.write regist_date & "<---regist_date<br>"
+Response.write hope_date & "<br>"
+Response.write link1 & "<br>"
+Response.write filename & "<br>"
+Response.write plan_date & "<br>"
+
+
+If uploadform("file1").FileLen > 0 Then
+
+	'파일 이름 확인
+	If fileCHK(uploadform("file1").FileName) = False Then
+		msg =	"파일이름에 잘못된 문자가 포함 되어있습니다."
+		url =	"history.back(-1);"
+	Else
+		If InStr(filename, ".") > 0 Then
+			arr_fileName = Split(filename,".")
+			fileext= arr_fileName(1)
+		Else
+			msg= "파일명에 문제가 있습니다."
+
+		End If
+
+		'파일크기 확인
+		Response.write fileext & "<--fileext<br>"
+		uploadform.MaxFileLen = 60000000
+
+		if uploadform("file1").FileLen > uploadform.MaxFileLen then
+			msg =	"파일이 너무 큽니다."
+			url =	"history.back(-1);"
+
+		elseif uploadform("file1").FileLen < uploadform.MaxFileLen  Then
+
+			'확장자 확인
+
+			If Ucase(fileext) = "ZIP" Or Ucase(fileext) = "EGG" Or Ucase(fileext) = "HWP" Or Ucase(fileext) = "BMP" Or Ucase(fileext) = "JPEG" Or Ucase(fileext) = "JPG" Or Ucase(fileext) = "PNG" Or Ucase(fileext) = "GIF" Or Ucase(fileext) = "IMG" Or Ucase(fileext) = "PDF" Then
+
+				'실제로 업로드할 파일이름으로 변경
+				final_filename= Replace(anm & "_" & changeTimeFormat(Now()) & "." & fileext, ":","")
+				final_filename= Replace(final_filename,"-","")
+				final_filename= Replace(final_filename," ","")
+				
+				filepath = uploadform.DefaultPath & "\\" & final_filename
+				uploadform("file1").SaveAs filepath
+
+				'데이터베이스 처리
+				If idx= "" then
+					sql="insert into board_request (user_id,name,category,title,content,regist_date,hope_date,link1,usr_ip,plan_date,close_date,memo,file1) "&_
+							"values ('" & aid & "', "&_
+							 " '" & anm & "', "&_
+							 " '" & category & "', "&_
+							 " '" & title & "', "&_
+							 " '" & content & "', "&_
+							 "  getdate(), "&_
+							 " '" & hope_date & "',"&_
+							 " '" & link1 & "', "&_
+							 " '" & usr_ip & "', "&_
+							 " '" & plan_date & "', "&_
+							 " '" & close_date & "', "&_
+							 " '" & memo & "', "&_
+							 " '" & final_filename & "')"
+				Else
+					sql = "UPDATE board_request SET user_id = '" & aid & "', "&_
+									" name = '" & anm & "', "&_
+									" category = '" & category & "', "&_
+									" title = '" & title & "', "&_
+									" content = '" & content & "', "&_
+									" hope_date = '" & hope_date & "', "&_
+									" link1 = '" & link1 & "', "&_
+									" plan_date = '" & plan_date & "', "&_
+									" close_date = '" & close_date & "', "&_
+									" memo = '" & memo & "', "&_
+									" file1 = '" & final_filename & "' "&_
+									" where idx = '" & idx & "' "
+				end If
+				
+				dbcon.execute(sql), Result
+
+				If Result > 0 then
+					msg="정상적으로 저장되었습니다."
+
+				Else
+					msg="다시시도 하시기 바랍니다."
+					url = "history.back(-1);"
+
+				End If
+
+				dbcon.close
+
+			End If
+
+		End if
+
+	End If
+
+Else
+	If idx= "" then
+					sql="insert into board_request (user_id,name,category,title,content,regist_date,hope_date,link1,usr_ip,plan_date,close_date,memo,file1) "&_
+							"values ('" & aid & "', "&_
+							 " '" & anm & "', "&_
+							 " '" & category & "', "&_
+							 " '" & title & "', "&_
+							 " '" & content & "', "&_
+							 "  getdate(), "&_
+							 " '" & hope_date & "',"&_
+							 " '" & link1 & "', "&_
+							 " '" & usr_ip & "', "&_
+							 " '" & plan_date & "', "&_
+							 " '" & close_date & "', "&_
+							 " '" & memo & "', "&_
+							 " '" & final_filename & "')"
+				Else
+					sql = "UPDATE board_request SET user_id = '" & aid & "', "&_
+									" name = '" & anm & "', "&_
+									" category = '" & category & "', "&_
+									" title = '" & title & "', "&_
+									" content = '" & content & "', "&_
+									" hope_date = '" & hope_date & "', "&_
+									" link1 = '" & link1 & "', "&_
+									" plan_date = '" & plan_date & "', "&_
+									" close_date = '" & close_date & "', "&_
+									" memo = '" & memo & "', "&_
+									" file1 = '" & final_filename & "' "&_
+									" where idx = '" & idx & "' "
+				end If
+				
+				dbcon.execute(sql), Result
+
+				If Result > 0 then
+					msg="정상적으로 저장되었습니다."
+
+				Else
+					msg="다시시도 하시기 바랍니다."
+					url = "history.back(-1);"
+
+				End If
+
+				dbcon.close
+
+
+End if
+
+%>
+<script type='text/javascript'>
+	alert("<%=msg%>");
+	location.href = 'dev_request.asp'
+</script>
+
+
