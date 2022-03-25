@@ -1,0 +1,177 @@
+<%
+page_id="3"
+menu_id="menu3_15"
+menu_group= "운영관리"
+menu_category= ""
+page_title= "개발요청"
+tab_Index= 1
+dialog_open = "N"
+%>
+<!--#include virtual="/include/metatag.asp"-->
+<!--#include virtual="/include/dbcon.asp"-->
+<!--#include virtual="/include/session.asp"-->
+<!--#include virtual="/include/function.asp"-->
+
+<%
+ki="title"
+kd=request("kd")
+
+b_asp="board_request.asp"
+folder_name="adm/board"
+tableName= "board_request"
+%>
+<!--#include virtual="/include/list_paging_top.asp"-->
+<%
+sql_a =	";with "&_
+	"tmp_a as (select row_number() over (order by e.regist_date) AS [RowNum], "&_
+	"idx, user_id, name, title, content, category, link1, file1, usr_ip, hope_date, plan_date,close_date, memo, regist_date "&_
+	"from "& tableName &" as e "& whereStr &" )"&_
+	"select * from tmp_a WHERE RowNum between " & startRowNum & " and " & endRowNum &_
+	"order by rownum desc "
+%>
+
+<div id="wrap">
+
+	<!--#include virtual="/include/header.asp"-->
+
+	<div id="container">
+		<!-- page title -->
+		<!--#include virtual="/include/page_title.asp"-->
+
+		<!-- 검색 -->
+		<div id="contentsL" style="margin-bottom:5px">
+			<div class="search">
+
+				<p>
+				<form name="sform" method="post" action="board_request.asp" onSubmit="return sendit(this)" style="margin-left:20px;">
+					<label for="searchTxt" class="skip"></label>
+					검색어 : &nbsp;&nbsp;<input type="text" name="kd" id="searchTxt" class="searchTxt" placeholder="검색어를 입력하세요">
+					<label for="searchBtn" class="skip"></label>
+					<input type="button" value="검색" id="searchBtn" class="btn btnBg1" alt="검색" onclick="search();return false;" />
+				</form>
+				<div class="search_R">
+					<input type="button" name="writeBtn" value=" 글쓰기 " class="btn btnBg1">
+				</div>
+				</p>
+			</div>
+		</div>
+
+		<!-- 내용 -->
+		<!--#include virtual="/include/loading.asp"-->
+		<%
+		if msg="" then
+			'Response.write "과정관리 입니다."
+			%>
+			<table class="grid">
+				<tr>
+					<th class="th4">번호</th>
+					<th class="th4">분류</th>
+					<%
+					If mask <> "Y" Then
+					%>
+					<th class="th5">작성자</th>
+					<%
+					End If
+					%>
+					<th class="th40">제목</th>
+					<th class="th5">파일</th>
+					<th class="th25">문제발생주소</th>
+					<th class="th17">완료희망일</th>
+					<th class="th17">예정완료일</th>
+					<th class="th17">완료일</th>
+					<th class="th30">메모</th>
+					<th class="th17">등록일</th>
+				</tr>
+			<%
+			Set rs=dbcon.execute(sql_a)
+			If rs.bof Or rs.eof Then
+			%>
+				<tr>
+					<td colspan="11">내용이 없습니다.</td>
+				</tr>
+			<%
+			Else
+				q=1
+				Do Until rs.eof
+
+					'파일이름
+					FileName = rs("file1")
+
+					'파일 다운로드 경로
+					filepath = "/files/dev_request/dev_request_file_download.asp?file=" & FileName
+					'상세페이지 경로
+					viewpath = "dev_request_view.asp?idx="& rs("idx")
+				%>
+				<tr>
+					<td><%=rs("idx")%></td>
+					<td><%=rs("category")%></td>
+					<%
+					If mask <> "Y" Then
+					%>
+					<td><%=rs("name")%></td>
+					<%
+					End if
+					%>
+					<td class="talignL"><a href="<%=viewpath%>"><%=rs("title")%></a></td>
+					<td><%If FileName <> "" Then Response.write "<a href='"&filepath&"' class='btn btnBg2' download>파일</a>"%></td>
+					<td><%=rs("link1")%></td>
+					<td><%=rs("hope_date")%></td>
+					<td><%=rs("plan_date")%></td>
+					<td><%=rs("close_date")%></td>
+					<td><%=rs("memo")%></td>
+					<td><%=rs("regist_date")%></td>
+				</tr>
+				<%
+					q=q+1
+					rs.movenext
+				loop
+			End If
+			dbcon.close
+			Set rs = Nothing
+			%>
+			</table>
+			<%
+		else
+
+		end if
+		%>
+
+	</div>
+	<!--#include virtual="/include/footer.asp"-->
+</div>
+
+<script>
+	$('#loading').hide();
+
+	/* 탭 번호 지정 */
+	var thisTabIndex= "<%=tab_Index%>"
+	thisPageTab(thisTabIndex);
+
+	/* 검색 */
+	function search() {
+		var kd = $('input[name=kd]').val();
+
+		if(kd=="") {
+			alert("검색어를 입력해주세요.");
+			$('input[name=kd]').focus();
+			return false;
+		}
+
+		document.sform.submit();
+	}
+
+	/* 검색 Enter Key Control */
+	function keyControl() {
+		if (event.keyCode==13){
+			search();
+		}
+	}
+
+	/* 글 작성 */
+	$('input[name=writeBtn]').click(function() {
+		location.href="dev_request_view.asp"
+	});
+</script>
+
+<body>
+</html>
