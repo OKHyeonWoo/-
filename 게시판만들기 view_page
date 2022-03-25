@@ -1,0 +1,207 @@
+<!--#include virtual="/include/metatag.asp"-->
+<!--#include virtual="/include/dbcon.asp"-->
+<!--#include virtual="/include/session.asp"-->
+<!--#include virtual="/include/function.asp"-->
+<%
+page_id="3"
+menu_id ="menu3_15_1"
+menu_group="운영관리"
+page_title= "개발요청_상세화면"
+menu_category= ""
+
+idx = request("idx")
+
+sql="select idx, user_id, name, title, content, category, link1, file1, usr_ip,hope_date,plan_date, close_date, memo, regist_date"&_
+" from board_request where idx='" & idx & "'"
+Set rs=dbcon.execute(sql)
+If Not rs.eof Then
+	idx =		NVL(rs("idx") , "")
+	title =		NVL(rs("title") , "")
+	content =		NVL(rs("content") , "")
+	category =	NVL(rs("category") , "")
+	filename =	NVL(rs("file1") , "")
+	link1 =	NVL(rs("link1") , "")
+	memo =		NVL(rs("memo") , "")
+	regist_date =	NVL(rs("regist_date") , "")
+	anm =		NVL(rs("name") , "")
+	close_date =NVL(rs("close_date") , "")
+	plan_date =	NVL(rs("plan_date") , "")
+	hope_date =	NVL(rs("hope_date") , "")
+End If
+
+'파일 다운로드 경로
+filepath = "/files/dev_request/dev_request_file_download.asp?file=" & filename
+%>
+	<div id="wrap">
+		<!--#include virtual="/include/header.asp"-->
+		<div id="container">
+			<!-- page title -->
+			<!--#include virtual="/include/page_title.asp"-->
+
+			<!-- 검색 -->
+			<div id="contentsL" style="margin-bottom:5px">
+				<div class="search">
+					<p></p>
+				</div>
+			</div>
+
+			<!-- 내용 -->
+			<!--#include virtual="/include/loading.asp"-->
+
+			<form name="nform" method="post" action="dev_request_view_save.asp" ENCTYPE="multipart/form-data">
+			<input type="hidden" id="idx" name="idx" value="<%=idx%>" />
+			<table>
+				<tr>
+					<th class="th5">분류</th>
+					<th class="th50">제목</th>
+					<th class="th5">파일</th>
+					<th class="th25">문제발생주소</th>
+					<th class="th17">완료희망일</th>
+					<th class="th17">예정완료일</th>
+					<th class="th17">완료일</th>
+					<th class="th30">메모</th>
+					<th class="th10">등록일</th>
+					<th></th>
+				</tr>
+				<tr>
+
+					<td>
+					<select name="category">
+							<option value="">선택</option>
+							<option value="교육" <%If category = "교육" Then response.write "selected"%>>교육</option>
+							<option value="영업" <%If category = "영업" Then response.write "selected"%>>영업</option>
+							<option value="경영" <%If category = "경영" Then response.write "selected"%>>경영</option>
+						</select>
+					</td>
+
+					<td><input type="text" name="title" value="<%=title%>" style="width: 98%;"></td>
+					<td><% If filename <> "" then response.write "<a href='"&filepath&"' class='btn btnBg2'>파일</a>"%></td>
+					<td><input type="text" name="link1" value="<%=link1%>" style="width: 98%;"></td>
+					<td><input class="input_80" type="text" name="hope_date" value=<%=hope_date%>></td>
+					<td><input class="input_80" type="text" name="plan_date" placeholder="개발팀입력" value=<%=plan_date%>></td>
+					<td><input class="input_80" type="text" name="close_date" placeholder="개발팀입력" value=<%=close_date%>></td>
+					<td><input type="text" name="memo" value="<%=memo%>" placeholder="개발팀입력" style="width: 98%;"></td>
+					<td><%=regist_date%></td>
+					<td></td>
+				</tr>
+				<tr>
+					<td colspan="7">
+						<textarea name="content" id="content" style="width:100%; height:600px; display:none;"><%=content%></textarea>
+					</td>
+					<td></td>
+				</tr>
+				<tr>
+					<th>자료업로드</th>
+					<td colspan="6" class="talignL"><input type="file" name="file1" style="width:98%"></td>
+					<td></td>
+				</tr>
+			</table>
+			</form>
+			<div class="btnList">
+				<input type="button" name="listBtn" value=" 목록 " class="btn btnBg1" onclick="history.go(-1)">
+				<input type="button" name="submitBtn" value=" 저장 " class="btn btnBg1">
+				<% If idx <> "" Then response.write "<input type='button' name='deleteBtn' value=' 삭제 ' class='btn btnBg1'>" %>
+			</div>
+		</div>
+		<!--#include virtual="/include/footer.asp"-->
+	</div>
+	<script type="text/javascript" src="/js/Smart_Editor_API/js/HuskyEZCreator.js"></script>
+	<script>
+
+		$('#loading').hide();
+
+		/* WIZWIG게시판 */
+		var oEditors = [];
+
+		nhn.husky.EZCreator.createInIFrame({
+			htParams : {
+				fOnBeforeUnload : function(){
+				}
+			},
+			oAppRef: oEditors,
+			elPlaceHolder: "content",
+			sSkinURI: "/js/Smart_Editor_API/SmartEditor2Skin.html",
+			fCreator: "createSEditor2"
+		});
+
+		/* 글 작성 및 수정 */
+		$('input[name=submitBtn]').click(function () {
+			var category = $('select[name=category]');
+			var title = $('input[name=title]');
+			var hope_date = $('input[name=hope_date]');
+			var content = $('textarea[name=content]');
+			var link1 = $('input[name=link1]');
+
+			if(!category.val()) {
+				alert("분류를 선택해주세요.");
+				category.focus();
+				return false;
+			}
+
+			if(!hope_date.val()) {
+				alert("희망일을 선택해주세요.");
+				hope_date.focus();
+				return false;
+			}
+
+			if(!title.val()) {
+				alert("제목을 입력해주세요.");
+				title.focus();
+				return false;
+			}
+
+			if(!link1.val()) {
+				alert("링크를 입력해주세요.");
+				link1.focus();
+				return false;
+			}
+
+			
+
+			if(!confirm("저장 하시겠습니까?")){
+				return false;
+			}
+
+			$('textarea[name=content]').val(oEditors.getById["content"].getIR());
+			$("form[name=nform]").attr("action","dev_request_view_save.asp").submit();
+
+		});
+
+		/* 글 삭제 */
+		$('input[name=deleteBtn]').click(function () {
+			if(!confirm('삭제 하시겠습니까?')){
+				return false;
+			} else {
+				$("form[name=nform]").attr("action","dev_request_view_delete.asp").submit();
+			}
+		});
+
+		/* calender */
+
+	
+
+		/*
+		이전 날짜 닫힘
+		$('input[name^=hope_date]').datepicker({dateFormat: 'yy-mm-dd', changeMonth: true, changeYear: true, minDate: 0,
+		yearRange: '2020:<%=year(now)+1%>', monthNamesShort: ['1','2','3','4','5','6','7','8','9','10','11','12']}) ;
+		*/
+
+		/*이전 날짜 열림*/
+		$('input[name^=hope_date]').datepicker({dateFormat: 'yy-mm-dd', changeMonth: true, changeYear: true, yearRange: '2020:<%=year(now)+1%>',
+		monthNamesShort: ['1','2','3','4','5','6','7','8','9','10','11','12']}) ;
+
+	
+		/*이전 날짜 열림*/
+		$('input[name^=plan_date]').datepicker({dateFormat: 'yy-mm-dd', changeMonth: true, changeYear: true, yearRange: '2020:<%=year(now)+1%>',
+		monthNamesShort: ['1','2','3','4','5','6','7','8','9','10','11','12']}) ;
+		
+	
+
+		/*이전 날짜 열림*/
+		$('input[name^=close_date]').datepicker({dateFormat: 'yy-mm-dd', changeMonth: true, changeYear: true, yearRange: '2020:<%=year(now)+1%>',
+		monthNamesShort: ['1','2','3','4','5','6','7','8','9','10','11','12']}) ;
+
+	</script>
+
+	</body>
+	</html>
