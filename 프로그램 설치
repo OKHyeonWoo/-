@@ -1,0 +1,26 @@
+에디트플러스 다운 후 
+   
+- 사용자 이름: fratwind
+- 등록 코드 (버전 5): 2ANWG-N77JJ-36BNG-5VQ2L-DQRFS
+
+ssms 다운 후
+
+ 
+서버이름 172.16.102.12
+인증 : SQLServer 인증
+로그인 ; ezen_sql
+암호: ezensql$^**
+
+VPN    
+ 
+[VPN접속방법]
+https://links.fortinet.com/forticlient/win/vpnagent 에서 윈도우용 vpn접속 프로그램을 다운로드 하신 다음 설치  
+
+ ezenvpn02
+!dlwps$$!@0  
+    
+ 
+원격 게이트 웨이는 182.162.176.195
+인증 방법은 pre-shared 키를 선택하시고 아랫칸에 !eZen!@#4 입력
+인증은 로그인 프롬프트 선택을 하신 후 저장을 눌러주시면 설정은 끝납니다
+비번  rhkdj002
